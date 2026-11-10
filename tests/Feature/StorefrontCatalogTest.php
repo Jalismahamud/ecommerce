@@ -338,6 +338,19 @@ class StorefrontCatalogTest extends TestCase
         $this->assertSame(0, Media::where('model_type', ShopProduct::class)->where('model_id', $betaOffer->id)->count());
     }
 
+    public function test_logout_triggers_full_storefront_shell_reload(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->post('/logout', [], $this->inertiaHeaders());
+
+        $response->assertStatus(409)
+            ->assertHeader('X-Inertia-Location', route('storefront.home'));
+
+        $this->assertGuest();
+    }
+
     /**
      * @return array<string, string|null>
      */

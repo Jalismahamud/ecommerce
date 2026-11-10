@@ -40,7 +40,7 @@ function changeShop(event) {
 
             <div class="container py-5">
                 <div class="flex flex-wrap items-center justify-between gap-4">
-                    <Link href="/" class="w-40 shrink-0" aria-label="Fresh Food home">
+                    <Link :href="shop ? `/?shop=${shop.slug}` : '/'" class="w-40 shrink-0" aria-label="Fresh Food home">
                         <img :src="'/images/fresh-food-logo.svg'" alt="Fresh Food" class="h-auto w-full">
                     </Link>
 
@@ -56,21 +56,23 @@ function changeShop(event) {
                         </button>
                     </form>
 
-                    <div class="order-2 flex items-center gap-3 lg:order-3">
+                    <div class="order-2 flex items-center gap-4 lg:order-3">
                         <select
                             v-if="shops.length"
                             :value="selectedShop"
-                            class="max-w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            class="max-w-44 rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm"
                             aria-label="Select shop"
                             @change="changeShop"
                         >
                             <option v-if="!shop" value="" disabled>Select shop...</option>
                             <option v-for="item in shops" :key="item.id" :value="item.slug">{{ item.name }}</option>
                         </select>
-                        <Link href="/cart" class="relative inline-flex items-center gap-2 text-gray-700 hover:text-green-600">
-                            <i class="ti ti-shopping-cart text-2xl"></i>
+                        <Link href="/cart" class="inline-flex items-center gap-2 text-gray-700 hover:text-green-600">
+                            <span class="relative inline-flex">
+                                <i class="ti ti-shopping-cart text-2xl"></i>
+                                <span v-if="cartCount" class="absolute -right-2 -top-2 rounded-full bg-green-600 px-1.5 py-0.5 text-xs leading-none text-white">{{ cartCount }}</span>
+                            </span>
                             <span class="hidden sm:inline">Cart</span>
-                            <span v-if="cartCount" class="absolute -right-3 -top-2 rounded-full bg-green-600 px-1.5 py-0.5 text-xs text-white">{{ cartCount }}</span>
                         </Link>
                         <a v-if="!page.props.auth?.user" href="/login" class="hidden text-gray-700 hover:text-green-600 sm:inline">Sign in</a>
                         <a v-else href="/dashboard" class="hidden text-gray-700 hover:text-green-600 sm:inline">Dashboard</a>
@@ -111,7 +113,7 @@ function changeShop(event) {
                 <div>
                     <h2 class="mb-3 font-semibold text-gray-900">Quick links</h2>
                     <div class="flex flex-col gap-2 text-sm text-gray-600">
-                        <Link href="/" class="hover:text-green-700">Home</Link>
+                        <Link :href="shop ? `/?shop=${shop.slug}` : '/'" class="hover:text-green-700">Home</Link>
                         <Link href="/cart" class="hover:text-green-700">Shopping cart</Link>
                     </div>
                 </div>
