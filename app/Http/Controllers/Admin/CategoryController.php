@@ -19,7 +19,9 @@ class CategoryController extends Controller
                 ->with('parent:id,name')
                 ->withCount('products')
                 ->orderBy('name')
-                ->paginate(20),
+                ->paginate(20)
+                ->withQueryString(),
+            'parentCategories' => Category::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

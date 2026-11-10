@@ -29,8 +29,12 @@ class ShopProductController extends Controller
         $shop = $shops->firstWhere('id', (int) $request->query('shop_id')) ?? $shops->first();
 
         $offers = $shop
-            ? $shop->offers()->with(['product.category', 'product.media', 'media'])->orderBy('created_at', 'desc')->paginate(15)
-            : new LengthAwarePaginator([], 0, 15);
+            ? $shop->offers()
+                ->with(['product.category', 'product.media', 'media'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(15, ['*'], 'offers_page')
+                ->withQueryString()
+            : new LengthAwarePaginator([], 0, 15, 1, ['pageName' => 'offers_page']);
 
         $catalog = Product::query()
             ->where('is_active', true)
@@ -40,10 +44,21 @@ class ShopProductController extends Controller
                 fn ($query) => $query->whereRaw('1 = 0')
             )
             ->when($request->string('search')->trim()->value(), fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
-            ->with('category:id,name')
+            ->with(['category:id,name', 'media'])
             ->orderBy('name')
-            ->paginate(12, ['id', 'category_id', 'name', 'sku', 'short_description'])
+            ->paginate(12, ['id', 'category_id', 'name', 'sku', 'short_description'], 'catalog_page')
             ->withQueryString();
+
+        $catalog->through(fn (Product $product) => [
+            'id' => $product->id,
+            'category_id' => $product->category_id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'short_description' => $product->short_description,
+            'category' => $product->category ? ['id' => $product->category->id, 'name' => $product->category->name] : null,
+            'image' => $product->getFirstMediaUrl('catalog-images')
+                ?: asset('frontend/fresh-food-theme/src/assets/images/products/product-img-'.(($product->id % 19) + 1).'.jpg'),
+        ]);
 
         $offers->through(fn (ShopProduct $offer) => [
             'id' => $offer->id,
@@ -51,6 +66,7 @@ class ShopProductController extends Controller
             'name' => $offer->product->name,
             'sku' => $offer->product->sku,
             'price' => $offer->price,
+            'compare_at_price' => $offer->compare_at_price,
             'stock' => $offer->stock,
             'description' => $offer->description,
             'is_active' => $offer->is_active,
@@ -120,7 +136,8 @@ class ShopProductController extends Controller
             ]);
 
             if ($request->hasFile('image')) {
-                $offer->addMediaFromRequest('image')->toMediaCollection('thumbnail');
+                $media = $offer->addMediaFromRequest('image')->toMediaCollection('thumbnail');
+                $media->copy($product, 'catalog-images');
             }
         });
 

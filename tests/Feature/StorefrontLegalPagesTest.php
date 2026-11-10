@@ -29,7 +29,7 @@ class StorefrontLegalPagesTest extends TestCase
     {
         return [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+            'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()) ?? '',
         ];
     }
 }

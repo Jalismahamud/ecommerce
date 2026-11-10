@@ -5,11 +5,11 @@ Laravel 12, Inertia.js and Vue power both the Fresh Food customer storefront and
 ## Local setup
 
 1. Install PHP/Composer dependencies with `composer install` and JavaScript dependencies with `npm install`.
-2. Copy `.env.example` to `.env`, configure the database, and run `php artisan key:generate`.
+2. Copy `.env.example` to `.env`, configure the database (if using the default `sqlite` connection, create `database/database.sqlite` or confirm when prompted), and run `php artisan key:generate`.
 3. Run `php artisan migrate --seed` to create the catalog tables and the `admin` / `shop-owner` roles.
 4. Run `php artisan storage:link` so uploaded product images can be served.
 5. Run `php artisan app:create-admin-user` to securely create the first administrator. No default administrator credentials are shipped.
-6. Start the frontend build watcher with `npm run dev`, then run the Laravel app using the local PHP server.
+6. Build frontend assets with `npm run build` (or start the Vite dev watcher with `npm run dev`), then run the Laravel app using `php artisan serve` (or your local web server).
 
 ## Local live QA fixtures
 

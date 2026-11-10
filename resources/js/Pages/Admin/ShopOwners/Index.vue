@@ -9,13 +9,46 @@ defineProps({
 });
 
 const dialog = ref(false);
-const form = useForm({ name: '', email: '', password: '', password_confirmation: '', shop_ids: [] });
+const editing = ref(false);
+const form = useForm({ id: null, name: '', email: '', password: '', password_confirmation: '', shop_ids: [] });
+
+function openCreate() {
+    editing.value = false;
+    form.reset();
+    form.clearErrors();
+    form.shop_ids = [];
+    dialog.value = true;
+}
+
+function openEdit(owner) {
+    editing.value = true;
+    form.clearErrors();
+    form.id = owner.id;
+    form.name = owner.name;
+    form.email = owner.email;
+    form.password = '';
+    form.password_confirmation = '';
+    form.shop_ids = owner.shops.map((shop) => shop.id);
+    dialog.value = true;
+}
 
 function save() {
-    form.post('/admin/shop-owners', {
+    const options = {
         preserveScroll: true,
         onSuccess: () => { dialog.value = false; form.reset(); },
-    });
+    };
+
+    if (editing.value) {
+        form.put(`/admin/shop-owners/${form.id}`, options);
+    } else {
+        form.post('/admin/shop-owners', options);
+    }
+}
+
+function remove(owner) {
+    if (window.confirm(`Delete shop owner "${owner.name}"? Their shop assignments will be removed, while shops and products remain.`)) {
+        router.delete(`/admin/shop-owners/${owner.id}`, { preserveScroll: true });
+    }
 }
 </script>
 
@@ -25,21 +58,25 @@ function save() {
         <div class="d-flex flex-wrap align-center justify-space-between ga-3 mb-5">
             <div>
                 <h1 class="text-h5 font-weight-bold">Shop owners</h1>
-                <p class="text-body-2 text-medium-emphasis mt-1">Create owner accounts and assign their shops.</p>
+                <p class="text-body-2 text-medium-emphasis mt-1">Create and manage owner accounts and assign their shops.</p>
             </div>
-            <v-btn color="primary" prepend-icon="mdi-account-plus-outline" @click="dialog = true">Create owner</v-btn>
+            <v-btn color="primary" prepend-icon="mdi-account-plus-outline" @click="openCreate">Create owner</v-btn>
         </div>
 
         <v-card rounded="lg" elevation="1">
             <v-table>
-                <thead><tr><th>Name</th><th>Email</th><th>Assigned shops</th></tr></thead>
+                <thead><tr><th>Name</th><th>Email</th><th>Assigned shops</th><th class="text-right">Actions</th></tr></thead>
                 <tbody>
                     <tr v-for="owner in owners.data" :key="owner.id">
                         <td class="font-weight-medium">{{ owner.name }}</td>
                         <td>{{ owner.email }}</td>
                         <td><v-chip v-for="shop in owner.shops" :key="shop.id" class="mr-1" size="small">{{ shop.name }}</v-chip><span v-if="!owner.shops.length" class="text-medium-emphasis">Unassigned</span></td>
+                        <td class="text-right">
+                            <v-btn icon="mdi-pencil-outline" variant="text" size="small" aria-label="Edit shop owner" @click="openEdit(owner)" />
+                            <v-btn icon="mdi-delete-outline" color="error" variant="text" size="small" aria-label="Delete shop owner" @click="remove(owner)" />
+                        </td>
                     </tr>
-                    <tr v-if="!owners.data.length"><td colspan="3" class="py-8 text-center text-medium-emphasis">No shop owners have been created.</td></tr>
+                    <tr v-if="!owners.data.length"><td colspan="4" class="py-8 text-center text-medium-emphasis">No shop owners have been created.</td></tr>
                 </tbody>
             </v-table>
             <div v-if="owners.last_page > 1" class="d-flex justify-end pa-3">
@@ -49,18 +86,39 @@ function save() {
 
         <v-dialog v-model="dialog" max-width="620">
             <v-card rounded="lg">
-                <v-card-title class="pa-5">Create shop owner</v-card-title>
+                <v-card-title class="pa-5">{{ editing ? 'Edit shop owner' : 'Create shop owner' }}</v-card-title>
                 <v-divider />
                 <v-card-text class="pa-5">
                     <v-form @submit.prevent="save">
                         <v-text-field v-model="form.name" label="Full name" variant="outlined" :error-messages="form.errors.name" />
                         <v-text-field v-model="form.email" label="Email" type="email" variant="outlined" :error-messages="form.errors.email" />
-                        <v-text-field v-model="form.password" label="Password (at least 12 characters)" type="password" variant="outlined" :error-messages="form.errors.password" />
-                        <v-text-field v-model="form.password_confirmation" label="Confirm password" type="password" variant="outlined" />
-                        <v-select v-model="form.shop_ids" :items="shops" item-title="name" item-value="id" label="Assign shops (optional)" multiple chips variant="outlined" :error-messages="form.errors.shop_ids" />
+                        <v-text-field
+                            v-model="form.password"
+                            :label="editing ? 'New password (optional, min 12 characters)' : 'Password (at least 12 characters)'"
+                            type="password"
+                            variant="outlined"
+                            :error-messages="form.errors.password"
+                        />
+                        <v-text-field
+                            v-model="form.password_confirmation"
+                            :label="editing ? 'Confirm new password' : 'Confirm password'"
+                            type="password"
+                            variant="outlined"
+                        />
+                        <v-select
+                            v-model="form.shop_ids"
+                            :items="shops"
+                            :item-title="(item) => item.is_active === false ? `${item.name} (Inactive)` : item.name"
+                            item-value="id"
+                            label="Assign shops (optional)"
+                            multiple
+                            chips
+                            variant="outlined"
+                            :error-messages="form.errors.shop_ids"
+                        />
                         <div class="d-flex justify-end ga-2 mt-4">
                             <v-btn variant="text" @click="dialog = false">Cancel</v-btn>
-                            <v-btn type="submit" color="primary" :loading="form.processing">Create account</v-btn>
+                            <v-btn type="submit" color="primary" :loading="form.processing">{{ editing ? 'Save changes' : 'Create account' }}</v-btn>
                         </div>
                     </v-form>
                 </v-card-text>

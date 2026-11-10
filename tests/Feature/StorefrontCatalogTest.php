@@ -7,7 +7,10 @@ use App\Models\Product;
 use App\Models\Shop;
 use App\Models\ShopProduct;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -159,6 +162,182 @@ class StorefrontCatalogTest extends TestCase
         ])->assertRedirect();
     }
 
+    public function test_unassigned_products_are_never_visible_to_customers(): void
+    {
+        $suffix = Str::uuid()->toString();
+        $shop = Shop::create(['name' => 'Visible Shop '.$suffix, 'slug' => 'visible-shop-'.$suffix, 'is_active' => true]);
+        $unassigned = Product::create(['name' => 'Unassigned Item '.$suffix, 'slug' => 'unassigned-item-'.$suffix, 'is_active' => true]);
+
+        $this->get('/?shop='.$shop->slug, $this->inertiaHeaders())
+            ->assertOk()
+            ->assertJsonMissing(['name' => $unassigned->name]);
+
+        $this->get("/shops/{$shop->slug}/{$unassigned->slug}")
+            ->assertNotFound();
+    }
+
+    public function test_admin_can_create_update_and_delete_shop_owners(): void
+    {
+        Role::findOrCreate('admin', 'web');
+        Role::findOrCreate('shop-owner', 'web');
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $shopA = Shop::create(['name' => 'Owner Shop A', 'slug' => 'owner-shop-a', 'is_active' => true]);
+        $shopB = Shop::create(['name' => 'Owner Shop B', 'slug' => 'owner-shop-b', 'is_active' => true]);
+
+        $this->actingAs($admin)
+            ->post('/admin/shop-owners', [
+                'name' => 'First Owner',
+                'email' => 'owner1@example.test',
+                'password' => 'StrongPass1234',
+                'password_confirmation' => 'StrongPass1234',
+                'shop_ids' => [$shopA->id],
+            ])
+            ->assertRedirect();
+
+        $owner = User::where('email', 'owner1@example.test')->firstOrFail();
+        $this->assertTrue($owner->hasRole('shop-owner'));
+        $this->assertTrue($owner->shops()->whereKey($shopA->id)->exists());
+
+        $this->put("/admin/shop-owners/{$owner->id}", [
+            'name' => 'Updated Owner',
+            'email' => 'owner1@example.test',
+            'password' => '',
+            'password_confirmation' => '',
+            'shop_ids' => [$shopB->id],
+        ])->assertRedirect();
+
+        $owner->refresh();
+        $this->assertSame('Updated Owner', $owner->name);
+        $this->assertFalse($owner->shops()->whereKey($shopA->id)->exists());
+        $this->assertTrue($owner->shops()->whereKey($shopB->id)->exists());
+
+        // Cannot edit or delete an admin through the shop-owners endpoint
+        $this->put("/admin/shop-owners/{$admin->id}", [
+            'name' => 'Hacked',
+            'email' => $admin->email,
+        ])->assertNotFound();
+        $this->delete("/admin/shop-owners/{$admin->id}")->assertNotFound();
+
+        $this->delete("/admin/shop-owners/{$owner->id}")->assertRedirect();
+        $this->assertDatabaseMissing('users', ['id' => $owner->id]);
+    }
+
+    public function test_admin_product_image_update_replaces_previous_catalog_image(): void
+    {
+        Storage::fake('public');
+        Role::findOrCreate('admin', 'web');
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $this->actingAs($admin)
+            ->post('/admin/products', [
+                'name' => 'Image Replace Test',
+                'is_active' => true,
+                'image' => UploadedFile::fake()->image('first.jpg', 100, 100),
+            ])
+            ->assertRedirect();
+
+        $product = Product::where('name', 'Image Replace Test')->firstOrFail();
+        $this->assertSame(1, $product->getMedia('catalog-images')->count());
+        $this->assertStringContainsString('first.jpg', $product->getFirstMediaUrl('catalog-images'));
+
+        $this->put("/admin/products/{$product->id}", [
+            'name' => 'Image Replace Test',
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('second.jpg', 100, 100),
+        ])->assertRedirect();
+
+        $product->refresh();
+        $this->assertSame(1, $product->getMedia('catalog-images')->count());
+        $this->assertStringContainsString('second.jpg', $product->getFirstMediaUrl('catalog-images'));
+    }
+
+    public function test_shared_catalog_flow_and_shop_specific_offers_with_media_cleanup(): void
+    {
+        Storage::fake('public');
+        Role::findOrCreate('admin', 'web');
+        Role::findOrCreate('shop-owner', 'web');
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $ownerA = User::factory()->create();
+        $ownerA->assignRole('shop-owner');
+        $ownerB = User::factory()->create();
+        $ownerB->assignRole('shop-owner');
+
+        $shopA = Shop::create(['name' => 'Shop Alpha', 'slug' => 'shop-alpha', 'is_active' => true]);
+        $shopB = Shop::create(['name' => 'Shop Beta', 'slug' => 'shop-beta', 'is_active' => true]);
+        $shopA->owners()->attach($ownerA);
+        $shopB->owners()->attach($ownerB);
+
+        $adminProduct = Product::create(['name' => 'Admin Honey', 'slug' => 'admin-honey', 'is_active' => true]);
+
+        // Owner A creates a new product with a thumbnail -> available in shared catalog for Owner B
+        $this->actingAs($ownerA)
+            ->post('/shop/products', [
+                'shop_id' => $shopA->id,
+                'name' => 'Owner Mango',
+                'price' => 10.00,
+                'compare_at_price' => 14.00,
+                'stock' => 6,
+                'description' => 'Alpha sweet mango',
+                'is_active' => true,
+                'image' => UploadedFile::fake()->image('alpha-mango.jpg', 100, 100),
+            ])
+            ->assertRedirect();
+
+        $mango = Product::where('name', 'Owner Mango')->firstOrFail();
+        $this->assertStringStartsWith('/storage/', $mango->getFirstMediaUrl('catalog-images'));
+
+        // Owner A index returns compare_at_price so editing does not lose it
+        $this->get("/shop/products?shop_id={$shopA->id}", $this->inertiaHeaders())
+            ->assertOk()
+            ->assertJsonPath('props.offers.data.0.compare_at_price', '14.00');
+
+        // Owner B browses shared catalog and sees both Admin and Owner A products
+        $catalogResponse = $this->actingAs($ownerB)
+            ->get("/shop/products?shop_id={$shopB->id}", $this->inertiaHeaders())
+            ->assertOk();
+
+        $catalogNames = collect($catalogResponse->json('props.catalog.data'))->pluck('name')->all();
+        $this->assertContains('Admin Honey', $catalogNames);
+        $this->assertContains('Owner Mango', $catalogNames);
+
+        // Owner B lists Owner Mango in Shop Beta with a different price, description, and thumbnail
+        $this->post('/shop/products/catalog', [
+            'shop_id' => $shopB->id,
+            'product_id' => $mango->id,
+            'price' => 15.50,
+            'compare_at_price' => 18.00,
+            'stock' => 9,
+            'description' => 'Beta organic mango',
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('beta-mango.jpg', 100, 100),
+        ])->assertRedirect();
+
+        // Customer sees shop-specific price, description, and thumbnail per shop
+        $this->get("/?shop={$shopA->slug}", $this->inertiaHeaders())
+            ->assertOk()
+            ->assertJsonPath('props.offers.data.0.price', '10.00')
+            ->assertJsonPath('props.offers.data.0.description', 'Alpha sweet mango');
+
+        $betaHome = $this->get("/?shop={$shopB->slug}", $this->inertiaHeaders())
+            ->assertOk()
+            ->assertJsonPath('props.offers.data.0.price', '15.50')
+            ->assertJsonPath('props.offers.data.0.description', 'Beta organic mango');
+
+        $this->assertStringContainsString('beta-mango.jpg', $betaHome->json('props.offers.data.0.image'));
+
+        // Deleting Shop Beta cleans up ShopProduct media records
+        $betaOffer = ShopProduct::where('shop_id', $shopB->id)->where('product_id', $mango->id)->firstOrFail();
+        $this->assertGreaterThan(0, Media::where('model_type', ShopProduct::class)->where('model_id', $betaOffer->id)->count());
+
+        $this->actingAs($admin)->delete("/admin/shops/{$shopB->id}")->assertRedirect();
+        $this->assertSame(0, Media::where('model_type', ShopProduct::class)->where('model_id', $betaOffer->id)->count());
+    }
+
     /**
      * @return array<string, string|null>
      */
@@ -166,7 +345,7 @@ class StorefrontCatalogTest extends TestCase
     {
         return [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+            'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()) ?? '',
         ];
     }
 }

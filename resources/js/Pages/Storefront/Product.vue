@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import StorefrontLayout from '../../Layouts/StorefrontLayout.vue';
 
@@ -28,7 +28,7 @@ function price(value) {
     <StorefrontLayout :shop="shop" :shops="shops">
         <section class="container py-10">
             <nav class="mb-8 flex flex-wrap items-center gap-y-1 text-sm text-gray-500">
-                <a href="/" class="hover:text-green-700">Home</a>
+                <Link :href="`/?shop=${shop.slug}`" class="hover:text-green-700">Home</Link>
                 <span class="mx-2">/</span>
                 <span class="break-words">{{ shop.name }}</span>
                 <span class="mx-2">/</span>
@@ -44,7 +44,7 @@ function price(value) {
                     <h1 class="text-3xl font-semibold text-gray-900">{{ offer.name }}</h1>
                     <div class="mt-5 flex items-center gap-3">
                         <span class="text-2xl font-semibold text-gray-900">{{ price(offer.price) }}</span>
-                        <span v-if="offer.compare_at_price" class="text-lg text-gray-400 line-through">{{ price(offer.compare_at_price) }}</span>
+                        <span v-if="Number(offer.compare_at_price) > Number(offer.price)" class="text-lg text-gray-400 line-through">{{ price(offer.compare_at_price) }}</span>
                     </div>
                     <p class="mt-5 whitespace-pre-line text-gray-600">{{ offer.description || 'Fresh quality groceries from your local shop.' }}</p>
                     <p class="mt-5 text-sm" :class="offer.stock > 0 ? 'text-green-700' : 'text-red-600'">

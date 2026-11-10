@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import 'vuetify/styles';
 import '@mdi/font/css/materialdesignicons.css';
 
@@ -16,9 +16,9 @@ function submit() {
         <v-main class="d-flex align-center bg-grey-lighten-4">
             <v-container class="py-12" style="max-width: 460px">
                 <v-card class="pa-6 pa-sm-9" elevation="2" rounded="lg">
-                    <Link href="/" class="d-block mb-8">
+                    <a href="/" class="d-block mb-8">
                         <img :src="'/images/fresh-food-logo.svg'" alt="Fresh Food" style="width: 170px">
-                    </Link>
+                    </a>
                     <h1 class="text-h4 font-weight-bold mb-2">Welcome back</h1>
                     <p class="text-body-2 text-medium-emphasis mb-7">Sign in to manage your account.</p>
 

@@ -12,7 +12,8 @@ const props = defineProps({
     filters: { type: Object, default: () => ({}) },
 });
 
-const activeTab = ref('shop-products');
+const initialParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+const activeTab = ref(initialParams.has('catalog_page') || Boolean(props.filters?.search) ? 'catalog' : 'shop-products');
 const catalogSearch = ref(props.filters.search ?? '');
 const createDialog = ref(false);
 const attachDialog = ref(false);
@@ -66,6 +67,7 @@ watch(() => props.shop?.id, (id) => {
 });
 
 function selectShop(shopId) {
+    catalogSearch.value = '';
     router.get('/shop/products', { shop_id: shopId }, { preserveState: true, preserveScroll: true });
 }
 
@@ -76,9 +78,37 @@ function searchCatalog() {
     }, { preserveState: true, preserveScroll: true, replace: true });
 }
 
+function goOffersPage(page) {
+    router.get('/shop/products', {
+        shop_id: props.shop?.id,
+        search: catalogSearch.value || undefined,
+        offers_page: page,
+        catalog_page: props.catalog?.current_page > 1 ? props.catalog.current_page : undefined,
+    }, { preserveState: true, preserveScroll: true });
+}
+
+function goCatalogPage(page) {
+    router.get('/shop/products', {
+        shop_id: props.shop?.id,
+        search: catalogSearch.value || undefined,
+        offers_page: props.offers?.current_page > 1 ? props.offers.current_page : undefined,
+        catalog_page: page,
+    }, { preserveState: true, preserveScroll: true });
+}
+
+function openCreate() {
+    createForm.reset();
+    createForm.clearErrors();
+    createForm.shop_id = props.shop?.id ?? null;
+    createForm.stock = 0;
+    createForm.is_active = true;
+    createDialog.value = true;
+}
+
 function openAttach(product) {
     selectedProduct.value = product;
     attachForm.reset();
+    attachForm.clearErrors();
     attachForm.shop_id = props.shop.id;
     attachForm.product_id = product.id;
     attachForm.stock = 0;
@@ -105,6 +135,7 @@ function createProduct() {
 
 function openEdit(offer) {
     selectedProduct.value = offer;
+    editForm.clearErrors();
     Object.assign(editForm, {
         shop_id: props.shop.id,
         price: offer.price,
@@ -139,7 +170,7 @@ function removeOffer(offer) {
     <DashboardLayout title="My shop products">
         <div class="d-flex flex-wrap align-center justify-space-between ga-3 mb-5">
             <div><h1 class="text-h5 font-weight-bold">Products & offers</h1><p class="text-body-2 text-medium-emphasis mt-1">Set your shop's price, stock, description and thumbnail.</p></div>
-            <v-btn v-if="shop" color="primary" prepend-icon="mdi-plus" @click="createDialog = true">Create new product</v-btn>
+            <v-btn v-if="shop" color="primary" prepend-icon="mdi-plus" @click="openCreate">Create new product</v-btn>
         </div>
 
         <v-card v-if="shops.length" class="mb-5" rounded="lg" elevation="1">
@@ -180,6 +211,9 @@ function removeOffer(offer) {
                                 <tr v-if="!offers.data.length"><td colspan="5" class="py-8 text-center text-medium-emphasis">No products assigned to this shop yet.</td></tr>
                             </tbody>
                         </v-table>
+                        <div v-if="offers.last_page > 1" class="d-flex justify-end pa-3">
+                            <v-pagination :model-value="offers.current_page" :length="offers.last_page" @update:model-value="goOffersPage" />
+                        </div>
                     </v-card>
                 </v-window-item>
 
@@ -192,17 +226,27 @@ function removeOffer(offer) {
                             </form>
                         </v-card-text>
                     </v-card>
-                    <div v-if="catalog.data.length" class="d-grid ga-4" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))">
+                    <div v-if="catalog.data.length" style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))">
                         <v-card v-for="product in catalog.data" :key="product.id" rounded="lg" elevation="1">
-                            <v-card-text>
-                                <div class="text-subtitle-1 font-weight-semibold">{{ product.name }}</div>
-                                <div class="text-caption text-medium-emphasis mt-1">{{ product.category?.name || 'Uncategorized' }} · {{ product.sku || 'No SKU' }}</div>
-                                <p class="text-body-2 mt-3">{{ product.short_description }}</p>
+                            <v-card-text class="d-flex flex-column h-100">
+                                <div class="d-flex align-center ga-3 mb-3">
+                                    <v-avatar rounded="lg" size="48" color="grey-lighten-3">
+                                        <v-img v-if="product.image" :src="product.image" :alt="product.name" cover />
+                                    </v-avatar>
+                                    <div style="min-width: 0">
+                                        <div class="text-subtitle-1 font-weight-semibold text-truncate">{{ product.name }}</div>
+                                        <div class="text-caption text-medium-emphasis">{{ product.category?.name || 'Uncategorized' }} · {{ product.sku || 'No SKU' }}</div>
+                                    </div>
+                                </div>
+                                <p class="text-body-2 mb-4 flex-grow-1">{{ product.short_description }}</p>
                                 <v-btn block color="primary" variant="tonal" prepend-icon="mdi-plus" @click="openAttach(product)">Add to {{ shop.name }}</v-btn>
                             </v-card-text>
                         </v-card>
                     </div>
                     <v-alert v-else type="info" variant="tonal">No unassigned products match your search.</v-alert>
+                    <div v-if="catalog.last_page > 1" class="d-flex justify-end pt-4">
+                        <v-pagination :model-value="catalog.current_page" :length="catalog.last_page" @update:model-value="goCatalogPage" />
+                    </div>
                 </v-window-item>
             </v-window>
         </template>

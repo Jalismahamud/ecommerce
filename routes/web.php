@@ -42,8 +42,7 @@ Route::prefix('admin')
         Route::resource('shops', AdminShopController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('products', AdminProductController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('categories', AdminCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::get('/shop-owners', [ShopOwnerController::class, 'index'])->name('shop-owners.index');
-        Route::post('/shop-owners', [ShopOwnerController::class, 'store'])->name('shop-owners.store');
+        Route::resource('shop-owners', ShopOwnerController::class)->only(['index', 'store', 'update', 'destroy']);
     });
 
 Route::prefix('shop')

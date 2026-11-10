@@ -23,10 +23,12 @@ class ShopOwnerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $shopOwner = $this->route('shop_owner');
+
         return [
             'name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:12', 'confirmed'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($shopOwner)],
+            'password' => [$shopOwner ? 'nullable' : 'required', 'string', 'min:12', 'confirmed'],
             'shop_ids' => ['sometimes', 'array'],
             'shop_ids.*' => ['integer', 'distinct', Rule::exists('shops', 'id')],
         ];

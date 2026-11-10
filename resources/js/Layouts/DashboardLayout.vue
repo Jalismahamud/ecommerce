@@ -1,5 +1,5 @@
 <script setup>
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useDisplay } from 'vuetify';
 import 'vuetify/styles';
@@ -42,9 +42,9 @@ function logout() {
             color="white"
         >
             <div class="pa-5">
-                <Link href="/" class="d-inline-block">
+                <a href="/" class="d-inline-block">
                     <img :src="'/images/fresh-food-logo.svg'" alt="Fresh Food" style="width: 165px">
-                </Link>
+                </a>
             </div>
             <v-divider />
             <div class="px-4 py-3 text-overline text-medium-emphasis">{{ isAdmin ? 'Administration' : 'Shop management' }}</div>
@@ -54,6 +54,7 @@ function logout() {
                     :key="item.href"
                     :prepend-icon="item.icon"
                     :title="item.label"
+                    :active="page.url.startsWith(item.href)"
                     color="primary"
                     rounded="lg"
                     @click="router.visit(item.href)"
@@ -73,7 +74,7 @@ function logout() {
                 <v-app-bar-nav-icon v-if="!mdAndUp" aria-label="Toggle navigation" @click="drawer = !drawer" />
                 <v-app-bar-title class="text-h6 font-weight-semibold">{{ title }}</v-app-bar-title>
                 <template #append>
-                    <Link href="/" class="mr-5 text-decoration-none text-medium-emphasis">View storefront</Link>
+                    <a href="/" class="mr-5 text-decoration-none text-medium-emphasis">View storefront</a>
                 </template>
             </v-app-bar>
             <v-container fluid class="pa-6 pa-md-8">

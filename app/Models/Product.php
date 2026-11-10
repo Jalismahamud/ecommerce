@@ -48,8 +48,15 @@ class Product extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $product): void {
+            $product->offers()->with('media')->each(fn (ShopProduct $offer) => $offer->delete());
+        });
+    }
+
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('catalog-images');
+        $this->addMediaCollection('catalog-images')->singleFile();
     }
 }

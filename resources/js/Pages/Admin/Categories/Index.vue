@@ -1,23 +1,29 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import DashboardLayout from '../../../Layouts/DashboardLayout.vue';
 
-defineProps({ categories: { type: Object, required: true } });
+const props = defineProps({
+    categories: { type: Object, required: true },
+    parentCategories: { type: Array, default: () => [] },
+});
 
 const dialog = ref(false);
 const editing = ref(false);
 const form = useForm({ id: null, name: '', slug: '', parent_id: null, is_active: true });
+const availableParents = computed(() => props.parentCategories.filter((cat) => cat.id !== form.id));
 
 function openCreate() {
     editing.value = false;
     form.reset();
+    form.clearErrors();
     form.is_active = true;
     dialog.value = true;
 }
 
 function openEdit(category) {
     editing.value = true;
+    form.clearErrors();
     form.id = category.id;
     form.name = category.name;
     form.slug = category.slug;
@@ -48,10 +54,11 @@ function remove(category) {
         </div>
         <v-card rounded="lg" elevation="1">
             <v-table>
-                <thead><tr><th>Name</th><th>Slug</th><th>Products</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+                <thead><tr><th>Name</th><th>Parent</th><th>Slug</th><th>Products</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
                 <tbody>
                     <tr v-for="category in categories.data" :key="category.id">
                         <td class="font-weight-medium">{{ category.name }}</td>
+                        <td>{{ category.parent?.name || '—' }}</td>
                         <td>{{ category.slug }}</td>
                         <td>{{ category.products_count }}</td>
                         <td><v-chip :color="category.is_active ? 'success' : 'default'" size="small">{{ category.is_active ? 'Active' : 'Inactive' }}</v-chip></td>
@@ -60,9 +67,12 @@ function remove(category) {
                             <v-btn icon="mdi-delete-outline" color="error" variant="text" size="small" aria-label="Delete category" @click="remove(category)" />
                         </td>
                     </tr>
-                    <tr v-if="!categories.data.length"><td colspan="5" class="py-8 text-center text-medium-emphasis">No categories have been created.</td></tr>
+                    <tr v-if="!categories.data.length"><td colspan="6" class="py-8 text-center text-medium-emphasis">No categories have been created.</td></tr>
                 </tbody>
             </v-table>
+            <div v-if="categories.last_page > 1" class="d-flex justify-end pa-3">
+                <v-pagination :model-value="categories.current_page" :length="categories.last_page" @update:model-value="(page) => router.get(`/admin/categories?page=${page}`)" />
+            </div>
         </v-card>
         <v-dialog v-model="dialog" max-width="560">
             <v-card rounded="lg">
@@ -72,6 +82,7 @@ function remove(category) {
                     <v-form @submit.prevent="save">
                         <v-text-field v-model="form.name" label="Category name" variant="outlined" :error-messages="form.errors.name" />
                         <v-text-field v-model="form.slug" label="Slug (optional)" variant="outlined" :error-messages="form.errors.slug" />
+                        <v-select v-model="form.parent_id" :items="availableParents" item-title="name" item-value="id" label="Parent category (optional)" clearable variant="outlined" :error-messages="form.errors.parent_id" />
                         <v-switch v-model="form.is_active" label="Active category" color="success" />
                         <div class="d-flex justify-end ga-2"><v-btn variant="text" @click="dialog = false">Cancel</v-btn><v-btn type="submit" color="primary" :loading="form.processing">Save category</v-btn></div>
                     </v-form>

@@ -25,6 +25,7 @@ const form = useForm({
 function openCreate() {
     editing.value = false;
     form.reset();
+    form.clearErrors();
     form.is_active = true;
     form.owner_ids = [];
     dialog.value = true;
@@ -32,6 +33,7 @@ function openCreate() {
 
 function openEdit(shop) {
     editing.value = true;
+    form.clearErrors();
     form.id = shop.id;
     form.name = shop.name;
     form.slug = shop.slug;

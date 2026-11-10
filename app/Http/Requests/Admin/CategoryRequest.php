@@ -23,10 +23,17 @@ class CategoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $category = $this->route('category');
+
         return [
             'name' => ['required', 'string', 'max:150'],
-            'slug' => ['nullable', 'string', 'max:180', Rule::unique('categories', 'slug')->ignore($this->route('category'))],
-            'parent_id' => ['nullable', 'integer', Rule::exists('categories', 'id')],
+            'slug' => ['nullable', 'string', 'max:180', Rule::unique('categories', 'slug')->ignore($category)],
+            'parent_id' => array_filter([
+                'nullable',
+                'integer',
+                Rule::exists('categories', 'id'),
+                $category ? Rule::notIn([$category->id]) : null,
+            ]),
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

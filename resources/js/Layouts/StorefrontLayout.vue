@@ -64,6 +64,7 @@ function changeShop(event) {
                             aria-label="Select shop"
                             @change="changeShop"
                         >
+                            <option v-if="!shop" value="" disabled>Select shop...</option>
                             <option v-for="item in shops" :key="item.id" :value="item.slug">{{ item.name }}</option>
                         </select>
                         <Link href="/cart" class="relative inline-flex items-center gap-2 text-gray-700 hover:text-green-600">
@@ -71,17 +72,17 @@ function changeShop(event) {
                             <span class="hidden sm:inline">Cart</span>
                             <span v-if="cartCount" class="absolute -right-3 -top-2 rounded-full bg-green-600 px-1.5 py-0.5 text-xs text-white">{{ cartCount }}</span>
                         </Link>
-                        <Link v-if="!page.props.auth?.user" href="/login" class="hidden text-gray-700 hover:text-green-600 sm:inline">Sign in</Link>
-                        <Link v-else href="/dashboard" class="hidden text-gray-700 hover:text-green-600 sm:inline">Dashboard</Link>
+                        <a v-if="!page.props.auth?.user" href="/login" class="hidden text-gray-700 hover:text-green-600 sm:inline">Sign in</a>
+                        <a v-else href="/dashboard" class="hidden text-gray-700 hover:text-green-600 sm:inline">Dashboard</a>
                     </div>
                 </div>
             </div>
 
             <nav class="border-t border-gray-100">
                 <div class="container flex items-center gap-8 py-3 text-sm font-medium">
-                    <Link href="/" class="text-green-700 hover:text-green-800">Home</Link>
-                    <a href="#featured-categories" class="text-gray-700 hover:text-green-700">Categories</a>
-                    <a href="#popular-products" class="text-gray-700 hover:text-green-700">Products</a>
+                    <Link :href="shop ? `/?shop=${shop.slug}` : '/'" class="text-green-700 hover:text-green-800">Home</Link>
+                    <Link :href="shop ? `/?shop=${shop.slug}#featured-categories` : '/#featured-categories'" class="text-gray-700 hover:text-green-700">Categories</Link>
+                    <Link :href="shop ? `/?shop=${shop.slug}#popular-products` : '/#popular-products'" class="text-gray-700 hover:text-green-700">Products</Link>
                     <span v-if="shop" class="ml-auto hidden text-gray-500 md:inline">Shopping at <strong class="text-gray-800">{{ shop.name }}</strong></span>
                 </div>
             </nav>

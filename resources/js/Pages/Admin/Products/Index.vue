@@ -26,12 +26,14 @@ const form = useForm({
 function openCreate() {
     editing.value = false;
     form.reset();
+    form.clearErrors();
     form.is_active = true;
     dialog.value = true;
 }
 
 function openEdit(product) {
     editing.value = true;
+    form.clearErrors();
     Object.assign(form, {
         id: product.id,
         category_id: product.category_id,

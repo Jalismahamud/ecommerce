@@ -39,6 +39,13 @@ class Shop extends Model implements HasMedia
         return $this->hasMany(ShopProduct::class);
     }
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $shop): void {
+            $shop->offers()->with('media')->each(fn (ShopProduct $offer) => $offer->delete());
+        });
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('logo')->singleFile();
