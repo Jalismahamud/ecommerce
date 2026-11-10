@@ -9,10 +9,13 @@ use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\ShopOwner\ShopProductController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\HomeController;
+use App\Http\Controllers\Storefront\LegalPageController;
 use App\Http\Controllers\Storefront\ProductController as StorefrontProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('storefront.home');
+Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('storefront.privacy');
+Route::get('/terms-and-conditions', [LegalPageController::class, 'terms'])->name('storefront.terms');
 Route::get('/shops/{shop}/{product}', StorefrontProductController::class)->name('storefront.products.show');
 Route::get('/cart', [CartController::class, 'index'])->name('storefront.cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('storefront.cart.store');

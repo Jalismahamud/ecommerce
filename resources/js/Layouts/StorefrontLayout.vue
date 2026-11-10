@@ -102,7 +102,7 @@ function changeShop(event) {
         </main>
 
         <footer class="mt-16 border-t border-gray-200 bg-gray-50">
-            <div class="container grid gap-8 py-12 md:grid-cols-3">
+            <div class="container grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4 lg:py-12">
                 <div>
                     <img :src="'/images/fresh-food-logo.svg'" alt="Fresh Food" class="mb-4 w-40">
                     <p class="max-w-sm text-sm text-gray-600">Fresh groceries and everyday essentials from your local shop.</p>
@@ -114,7 +114,14 @@ function changeShop(event) {
                         <Link href="/cart" class="hover:text-green-700">Shopping cart</Link>
                     </div>
                 </div>
-                <div class="flex items-start md:justify-end">
+                <div>
+                    <h2 class="mb-3 font-semibold text-gray-900">Information</h2>
+                    <div class="flex flex-col gap-2 text-sm text-gray-600">
+                        <Link href="/privacy-policy" class="hover:text-green-700">Privacy Policy</Link>
+                        <Link href="/terms-and-conditions" class="hover:text-green-700">Terms &amp; Conditions</Link>
+                    </div>
+                </div>
+                <div class="flex items-start lg:justify-end">
                     <div class="flex items-center gap-3">
                         <img :src="'/frontend/fresh-food-theme/src/assets/images/payment/visa.svg'" alt="Visa" class="h-7">
                         <img :src="'/frontend/fresh-food-theme/src/assets/images/payment/mastercard.svg'" alt="Mastercard" class="h-7">
@@ -122,7 +129,12 @@ function changeShop(event) {
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-200 py-4 text-center text-sm text-gray-500">© {{ new Date().getFullYear() }} Fresh Food</div>
+            <div class="border-t border-gray-200 px-4 py-4 text-center text-sm text-gray-500">
+                © {{ new Date().getFullYear() }} Fresh Food
+                <span class="mx-1">·</span>
+                Developed by
+                <a href="https://jalisdev.com" target="_blank" rel="noopener noreferrer" class="font-medium text-gray-700 hover:text-green-700">Jalis Mahamud</a>
+            </div>
         </footer>
     </div>
 </template>

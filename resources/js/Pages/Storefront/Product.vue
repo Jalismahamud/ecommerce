@@ -27,16 +27,16 @@ function price(value) {
     <Head :title="offer.name" />
     <StorefrontLayout :shop="shop" :shops="shops">
         <section class="container py-10">
-            <nav class="mb-8 text-sm text-gray-500">
+            <nav class="mb-8 flex flex-wrap items-center gap-y-1 text-sm text-gray-500">
                 <a href="/" class="hover:text-green-700">Home</a>
                 <span class="mx-2">/</span>
-                <span>{{ shop.name }}</span>
+                <span class="break-words">{{ shop.name }}</span>
                 <span class="mx-2">/</span>
-                <span class="text-gray-800">{{ offer.name }}</span>
+                <span class="break-words text-gray-800">{{ offer.name }}</span>
             </nav>
 
-            <div class="grid gap-10 md:grid-cols-2">
-                <div class="flex min-h-[360px] items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
+            <div class="grid gap-6 md:grid-cols-2 md:gap-10">
+                <div class="flex min-h-[260px] items-center justify-center rounded-lg border border-gray-200 bg-white p-5 sm:min-h-[360px] sm:p-8">
                     <img :src="offer.thumbnail" :alt="offer.name" class="max-h-[420px] w-full object-contain">
                 </div>
                 <div class="py-2">

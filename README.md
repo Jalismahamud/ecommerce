@@ -11,6 +11,10 @@ Laravel 12, Inertia.js and Vue power both the Fresh Food customer storefront and
 5. Run `php artisan app:create-admin-user` to securely create the first administrator. No default administrator credentials are shipped.
 6. Start the frontend build watcher with `npm run dev`, then run the Laravel app using the local PHP server.
 
+## Local live QA fixtures
+
+For browser testing, set `LIVE_QA_SEED_PASSWORD` in `.env` to a password of at least 16 characters, then run `php artisan db:seed --class=Database\Seeders\LiveQaSeeder`. This local-only, additive seeder creates two QA accounts, one shop, five categories, eight products, and eight shop offers. It does not reset or delete existing data.
+
 ## Main areas
 
 - `/` — Fresh Food storefront. Select an active shop to browse its active offers.

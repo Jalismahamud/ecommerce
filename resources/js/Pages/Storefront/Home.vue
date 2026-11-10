@@ -110,8 +110,8 @@ const sliderOptions = {
 
         <section class="mt-10">
             <div class="container">
-                <div class="flex flex-wrap md:flex-nowrap md:space-x-2 lg:space-x-6">
-                    <div class="mb-3 w-full md:w-1/2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
                         <div class="rounded-lg px-8 py-10" style="background: url('/frontend/fresh-food-theme/src/assets/images/banner/grocery-banner.png') no-repeat center; background-size: cover">
                             <div class="flex flex-col gap-5">
                                 <div class="flex flex-col gap-1">
@@ -122,7 +122,7 @@ const sliderOptions = {
                             </div>
                         </div>
                     </div>
-                    <div class="w-full md:w-1/2">
+                    <div>
                         <div class="rounded-lg px-8 py-10" style="background: url('/frontend/fresh-food-theme/src/assets/images/banner/grocery-banner-2.jpg') no-repeat center; background-size: cover">
                             <div class="flex flex-col gap-5">
                                 <div class="flex flex-col gap-1">

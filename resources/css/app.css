@@ -5,3 +5,60 @@ body,
 #app {
     min-height: 100%;
 }
+
+.freshfood-hero .swiper-button-prev,
+.freshfood-hero .swiper-button-next {
+    width: 36px;
+    height: 36px;
+    margin-top: -18px;
+    border-radius: 9999px;
+    background: transparent;
+    color: #21313c;
+    box-shadow: none;
+}
+
+.freshfood-hero .swiper-button-prev {
+    right: auto;
+    left: 16px;
+}
+
+.freshfood-hero .swiper-button-next {
+    right: 16px;
+    left: auto;
+}
+
+.freshfood-hero .swiper-button-prev::after,
+.freshfood-hero .swiper-button-next::after {
+    font-family: 'tabler-icons';
+    font-size: 22px;
+}
+
+.freshfood-hero .swiper-button-prev::after {
+    content: '\ea60';
+}
+
+.freshfood-hero .swiper-button-next::after {
+    content: '\ea61';
+}
+
+.freshfood-hero .swiper-button-prev:hover,
+.freshfood-hero .swiper-button-next:hover {
+    background: transparent;
+    color: #0aad0a;
+}
+
+.freshfood-hero .swiper-button-prev:focus-visible,
+.freshfood-hero .swiper-button-next:focus-visible {
+    outline: 2px solid #0aad0a;
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .freshfood-hero .swiper-button-prev {
+        left: 8px;
+    }
+
+    .freshfood-hero .swiper-button-next {
+        right: 8px;
+    }
+}

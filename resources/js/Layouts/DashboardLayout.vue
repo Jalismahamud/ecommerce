@@ -1,12 +1,18 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useDisplay } from 'vuetify';
 import 'vuetify/styles';
 import '@mdi/font/css/materialdesignicons.css';
 
 defineProps({ title: { type: String, default: 'Dashboard' } });
 
 const page = usePage();
+const { mdAndUp } = useDisplay();
+const drawer = ref(mdAndUp.value);
+watch(mdAndUp, (isDesktop) => {
+    drawer.value = isDesktop;
+});
 const isAdmin = computed(() => page.props.auth?.user?.roles?.includes('admin'));
 const navigation = computed(() => isAdmin.value
     ? [
@@ -28,7 +34,13 @@ function logout() {
 
 <template>
     <v-app>
-        <v-navigation-drawer permanent width="260" color="white">
+        <v-navigation-drawer
+            v-model="drawer"
+            :permanent="mdAndUp"
+            :temporary="!mdAndUp"
+            width="260"
+            color="white"
+        >
             <div class="pa-5">
                 <Link href="/" class="d-inline-block">
                     <img :src="'/images/fresh-food-logo.svg'" alt="Fresh Food" style="width: 165px">
@@ -58,6 +70,7 @@ function logout() {
 
         <v-main class="bg-grey-lighten-4">
             <v-app-bar flat color="white" class="border-b">
+                <v-app-bar-nav-icon v-if="!mdAndUp" aria-label="Toggle navigation" @click="drawer = !drawer" />
                 <v-app-bar-title class="text-h6 font-weight-semibold">{{ title }}</v-app-bar-title>
                 <template #append>
                     <Link href="/" class="mr-5 text-decoration-none text-medium-emphasis">View storefront</Link>

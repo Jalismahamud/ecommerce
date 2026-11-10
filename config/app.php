@@ -53,6 +53,7 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    'qa_seed_password' => env('LIVE_QA_SEED_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------

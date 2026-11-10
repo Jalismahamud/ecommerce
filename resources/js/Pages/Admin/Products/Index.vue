@@ -62,6 +62,10 @@ function remove(product) {
         router.delete(`/admin/products/${product.id}`, { preserveScroll: true });
     }
 }
+
+function productImage(product) {
+    return product.image || `/frontend/fresh-food-theme/src/assets/images/products/product-img-${(product.id % 19) + 1}.jpg`;
+}
 </script>
 
 <template>
@@ -69,7 +73,7 @@ function remove(product) {
     <DashboardLayout title="Shared catalog">
         <div class="d-flex flex-wrap align-center justify-space-between ga-3 mb-5">
             <div><h1 class="text-h5 font-weight-bold">Shared catalog</h1><p class="text-body-2 text-medium-emphasis mt-1">Manage products available to shop owners.</p></div>
-            <div class="d-flex ga-2">
+            <div class="d-flex flex-wrap ga-2">
                 <v-btn variant="outlined" prepend-icon="mdi-shape-outline" @click="router.visit('/admin/categories')">Categories</v-btn>
                 <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreate">Add product</v-btn>
             </div>
@@ -82,7 +86,7 @@ function remove(product) {
                     <tr v-for="product in products.data" :key="product.id">
                         <td>
                             <div class="d-flex align-center ga-3">
-                                <v-avatar rounded="lg" size="46" color="grey-lighten-3"><v-img v-if="product.image" :src="product.image" :alt="product.name" cover /></v-avatar>
+                                <v-avatar rounded="lg" size="46" color="grey-lighten-3"><img :src="productImage(product)" :alt="product.name" class="h-100 w-100" style="object-fit: cover"></v-avatar>
                                 <div><div class="font-weight-medium">{{ product.name }}</div><div class="text-caption text-medium-emphasis">{{ product.slug }}</div></div>
                             </div>
                         </td>
