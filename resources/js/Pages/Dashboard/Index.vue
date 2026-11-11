@@ -11,7 +11,7 @@ const page = usePage();
 const isAdmin = computed(() => page.props.auth?.user?.roles?.includes('admin'));
 const cards = computed(() => [
     { title: isAdmin.value ? 'Shops' : 'Assigned shops', value: page.props.stats?.shops ?? 0, icon: 'mdi-store-outline', color: 'primary' },
-    { title: 'Catalog products', value: page.props.stats?.products ?? 0, icon: 'mdi-package-variant-closed', color: 'success' },
+    { title: isAdmin.value ? 'Catalog products' : 'Shop products', value: page.props.stats?.products ?? 0, icon: 'mdi-package-variant-closed', color: 'success' },
     { title: isAdmin.value ? 'Shop offers' : 'Low stock offers', value: page.props.stats?.offers ?? 0, icon: 'mdi-chart-box-outline', color: 'warning' },
 ]);
 </script>

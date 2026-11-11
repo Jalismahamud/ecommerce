@@ -192,6 +192,47 @@ class StorefrontCatalogTest extends TestCase
             ->assertSessionHasErrors('name');
     }
 
+    public function test_shop_owner_product_list_isolated_by_selected_shop(): void
+    {
+        Role::findOrCreate('shop-owner', 'web');
+
+        $suffix = Str::uuid()->toString();
+        $firstShop = Shop::create(['name' => 'First shop '.$suffix, 'slug' => 'first-shop-'.$suffix, 'is_active' => true]);
+        $secondShop = Shop::create(['name' => 'Second shop '.$suffix, 'slug' => 'second-shop-'.$suffix, 'is_active' => true]);
+        $firstProduct = Product::create(['name' => 'First shop item '.$suffix, 'slug' => 'first-shop-item-'.$suffix, 'is_active' => true]);
+        $secondProduct = Product::create(['name' => 'Second shop item '.$suffix, 'slug' => 'second-shop-item-'.$suffix, 'is_active' => true]);
+        $owner = User::factory()->create();
+        $owner->assignRole('shop-owner');
+        $owner->shops()->attach([$firstShop->id, $secondShop->id]);
+
+        ShopProduct::create([
+            'shop_id' => $firstShop->id,
+            'product_id' => $firstProduct->id,
+            'price' => 10,
+            'stock' => 5,
+            'is_active' => true,
+        ]);
+        ShopProduct::create([
+            'shop_id' => $secondShop->id,
+            'product_id' => $secondProduct->id,
+            'price' => 20,
+            'stock' => 5,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($owner)
+            ->get('/shop/products?shop_id='.$secondShop->id, $this->inertiaHeaders())
+            ->assertOk()
+            ->assertJsonPath('component', 'ShopOwner/Products/Index')
+            ->assertJsonPath('props.shop.id', $secondShop->id)
+            ->assertJsonPath('props.offers.data.0.name', $secondProduct->name);
+
+        $this->assertNotContains(
+            $firstProduct->name,
+            collect($response->json('props.offers.data'))->pluck('name')->all()
+        );
+    }
+
     public function test_unassigned_products_are_never_visible_to_customers(): void
     {
         $suffix = Str::uuid()->toString();
