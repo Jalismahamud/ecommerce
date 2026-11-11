@@ -17,5 +17,9 @@ class DatabaseSeeder extends Seeder
 
         Role::findOrCreate('admin', 'web');
         Role::findOrCreate('shop-owner', 'web');
+
+        if (app()->environment('local') && config('app.qa_seed_password')) {
+            $this->call(LiveQaSeeder::class);
+        }
     }
 }

@@ -44,20 +44,8 @@ class ShopProductRequest extends FormRequest
             ];
         }
 
-        return [
+        $common = [
             'shop_id' => ['required', 'integer', Rule::exists('shops', 'id')],
-            'product_id' => [
-                'required_without:name',
-                'integer',
-                Rule::exists('products', 'id'),
-                Rule::unique('shop_products', 'product_id')->where(fn ($query) => $query->where('shop_id', $this->input('shop_id'))),
-            ],
-            'name' => ['required_without:product_id', 'string', 'max:180'],
-            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')],
-            'sku' => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')],
-            'brand' => ['nullable', 'string', 'max:150'],
-            'short_description' => ['nullable', 'string', 'max:255'],
-            'product_description' => ['nullable', 'string', 'max:10000'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'compare_at_price' => ['nullable', 'numeric', 'gte:price', 'max:99999999.99'],
             'stock' => ['required', 'integer', 'min:0', 'max:4294967295'],
@@ -65,6 +53,35 @@ class ShopProductRequest extends FormRequest
             'is_active' => ['sometimes', 'boolean'],
             'is_featured' => ['sometimes', 'boolean'],
             'image' => ['nullable', 'image', 'max:5120'],
+        ];
+
+        if ($this->routeIs('shop-owner.products.attach')) {
+            return [
+                ...$common,
+                'product_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('products', 'id'),
+                    Rule::unique('shop_products', 'product_id')->where(fn ($query) => $query->where('shop_id', $this->input('shop_id'))),
+                ],
+                'name' => ['prohibited'],
+                'category_id' => ['prohibited'],
+                'sku' => ['prohibited'],
+                'brand' => ['prohibited'],
+                'short_description' => ['prohibited'],
+                'product_description' => ['prohibited'],
+            ];
+        }
+
+        return [
+            ...$common,
+            'product_id' => ['prohibited'],
+            'name' => ['required', 'string', 'max:180'],
+            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')],
+            'sku' => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')],
+            'brand' => ['nullable', 'string', 'max:150'],
+            'short_description' => ['nullable', 'string', 'max:255'],
+            'product_description' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

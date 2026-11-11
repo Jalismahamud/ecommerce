@@ -26,13 +26,13 @@ class LiveQaSeeder extends Seeder
         }
 
         DB::transaction(function (): void {
-            $admin = User::firstOrCreate(
+            $admin = User::updateOrCreate(
                 ['email' => 'admin@freshfood.test'],
                 ['name' => 'Fresh Food QA Admin', 'password' => config('app.qa_seed_password')]
             );
             $admin->assignRole('admin');
 
-            $owner = User::firstOrCreate(
+            $owner = User::updateOrCreate(
                 ['email' => 'owner@freshfood.test'],
                 ['name' => 'Fresh Food QA Owner', 'password' => config('app.qa_seed_password')]
             );

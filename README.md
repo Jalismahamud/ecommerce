@@ -6,14 +6,20 @@ Laravel 12, Inertia.js and Vue power both the Fresh Food customer storefront and
 
 1. Install PHP/Composer dependencies with `composer install` and JavaScript dependencies with `npm install`.
 2. Copy `.env.example` to `.env`, configure the database (if using the default `sqlite` connection, create `database/database.sqlite` or confirm when prompted), and run `php artisan key:generate`.
-3. Run `php artisan migrate --seed` to create the catalog tables and the `admin` / `shop-owner` roles.
+3. Run `php artisan migrate --seed` to create the catalog tables, roles, demo accounts, and realistic sample catalog data.
 4. Run `php artisan storage:link` so uploaded product images can be served.
-5. Run `php artisan app:create-admin-user` to securely create the first administrator. No default administrator credentials are shipped.
+5. Sign in with the local demo accounts below, or run `php artisan app:create-admin-user` to create a separate administrator.
 6. Build frontend assets with `npm run build` (or start the Vite dev watcher with `npm run dev`), then run the Laravel app using `php artisan serve` (or your local web server).
 
 ## Local live QA fixtures
 
-For browser testing, set `LIVE_QA_SEED_PASSWORD` in `.env` to a password of at least 16 characters, then run `php artisan db:seed --class=Database\Seeders\LiveQaSeeder`. This local-only, additive seeder creates two QA accounts, one shop, five categories, eight products, and eight shop offers. It does not reset or delete existing data.
+The default `.env.example` configures `LIVE_QA_SEED_PASSWORD`, so `php artisan migrate --seed` creates the following local accounts:
+
+- Admin: `admin@freshfood.test`
+- Shop owner: `owner@freshfood.test`
+- Password: the value of `LIVE_QA_SEED_PASSWORD` in `.env`
+
+For browser testing after the initial setup, you can rerun `php artisan db:seed --class=Database\Seeders\LiveQaSeeder`. This local-only, idempotent seeder creates or updates two QA accounts, one shop, five categories, eight products, and eight shop offers. It does not reset or delete existing data. The password must be at least 16 characters.
 
 ## Main areas
 

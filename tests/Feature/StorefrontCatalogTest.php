@@ -162,6 +162,36 @@ class StorefrontCatalogTest extends TestCase
         ])->assertRedirect();
     }
 
+    public function test_shop_owner_endpoints_reject_mismatched_payloads_without_server_errors(): void
+    {
+        Role::findOrCreate('shop-owner', 'web');
+
+        $suffix = Str::uuid()->toString();
+        $shop = Shop::create(['name' => 'Validation shop '.$suffix, 'slug' => 'validation-shop-'.$suffix, 'is_active' => true]);
+        $product = Product::create(['name' => 'Validation product '.$suffix, 'slug' => 'validation-product-'.$suffix, 'is_active' => true]);
+        $owner = User::factory()->create();
+        $owner->assignRole('shop-owner');
+        $owner->shops()->attach($shop);
+
+        $this->actingAs($owner)
+            ->post('/shop/products/catalog', [
+                'shop_id' => $shop->id,
+                'name' => 'Wrong endpoint payload',
+                'price' => 10,
+                'stock' => 2,
+            ])
+            ->assertSessionHasErrors('product_id');
+
+        $this->actingAs($owner)
+            ->post('/shop/products', [
+                'shop_id' => $shop->id,
+                'product_id' => $product->id,
+                'price' => 10,
+                'stock' => 2,
+            ])
+            ->assertSessionHasErrors('name');
+    }
+
     public function test_unassigned_products_are_never_visible_to_customers(): void
     {
         $suffix = Str::uuid()->toString();
